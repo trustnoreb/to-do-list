@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 import css from "./column.module.css";
 
 const columnTitles = {
-  toDo: "To Do",
+  todo: "To Do",
   doing: "Doing",
   done: "Done",
 };

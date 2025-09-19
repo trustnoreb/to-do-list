@@ -3,7 +3,7 @@ export type Columns = {
   title: string;
 };
 
-export type columnIds = "toDo" | "doing" | "done";
+export type columnIds = "todo" | "doing" | "done";
 
 export type TaskList = Record<columnIds, TaskType[]>;
 

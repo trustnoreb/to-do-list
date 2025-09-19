@@ -1,5 +1,5 @@
 "use client";
-import { columnIds, TaskList, TaskType } from "@/app/types";
+import { columnIds, TaskType } from "@/app/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cloneDeep } from "lodash-es";
@@ -10,7 +10,7 @@ import css from "./task.module.css";
 interface Props {
   task: TaskType;
   column: columnIds;
-  setTasks: Dispatch<SetStateAction<TaskList>>;
+  setTasks: Dispatch<SetStateAction<TaskType[]>>;
   disabled: boolean;
   multiDragging: boolean;
 }
@@ -41,9 +41,7 @@ function DraggableItem({
   function handleTaskClick() {
     setTasks((prevSelectedTasks) => {
       const copiedState = cloneDeep(prevSelectedTasks);
-      const taskToInvertSelected = copiedState[column].find(
-        (t) => t.id === task.id
-      );
+      const taskToInvertSelected = copiedState.find((t) => t.id === task.id);
       if (taskToInvertSelected) {
         taskToInvertSelected.selected = !taskToInvertSelected.selected;
       }
