@@ -1,0 +1,27 @@
+.column {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  width: 450px;
+  height: 800px;
+  padding: 20px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.dragging {
+  opacity: 60%;
+}
+
+.heading {
+  padding: 25px;
+  text-align: center;
+}
+
+.tasksContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  height: 100%;
+}

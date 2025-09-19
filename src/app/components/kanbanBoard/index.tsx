@@ -1,0 +1,246 @@
+"use client";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+// import { SortableContext } from "@dnd-kit/sortable";
+import { columnIds, TaskList, TaskType } from "@/app/types";
+import { arrayMove } from "@dnd-kit/sortable";
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import Column from "../column";
+import DraggableItem from "../draggableItem";
+import Task from "../task";
+import css from "./kanbanBoard.module.css";
+
+function KanbanBoard() {
+  const allTask: TaskList = {
+    toDo: [
+      {
+        id: "task-1",
+        name: "Preparare la presentazione settimanale",
+        status: "todo",
+      },
+      {
+        id: "task-4",
+        name: "Scrivere il report del progetto X",
+        status: "todo",
+      },
+      {
+        id: "task-8",
+        name: "Aggiornare la documentazione tecnica",
+        status: "todo",
+      },
+    ],
+    doing: [
+      { id: "task-2", name: "Rivedere il budget mensile", status: "doing" },
+      {
+        id: "task-5",
+        name: "Organizzare riunione con il team marketing",
+        status: "doing",
+      },
+      {
+        id: "task-7",
+        name: "Preparare le email per la campagna pubblicitaria",
+        status: "doing",
+      },
+      {
+        id: "task-10",
+        name: "Creare il piano di formazione per i nuovi assunti",
+        status: "doing",
+      },
+    ],
+    done: [
+      {
+        id: "task-3",
+        name: "Aggiornare il sito web aziendale",
+        status: "done",
+      },
+      {
+        id: "task-6",
+        name: "Analizzare i dati di vendita del trimestre",
+        status: "done",
+      },
+      {
+        id: "task-9",
+        name: "Testare la nuova funzionalità dell’app",
+        status: "done",
+      },
+    ],
+  };
+
+  const [activeTask, setActiveTask] = useState<TaskType | null>(null);
+  const [overTask, setOverTask] = useState<TaskType | null>(null);
+  const [tasks, setTasks] = useState(allTask);
+
+  const sensors = useSensors(
+    // Questa cosa è per l'esempio del tipo perchè
+    // deve distinguere tra un bottone e il vero spostamento
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+      },
+    })
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    const { active } = event;
+    if (!active) return;
+    setActiveTask(active.data.current?.task);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event;
+    if (!over) return;
+    setOverTask(event.over?.data?.current?.task);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    console.log(event);
+    const { active, over } = event;
+    setActiveTask(null);
+    setOverTask(null);
+    if (!over) return;
+
+    if (active.id === over.id) return;
+
+    setTasks((prevTasksState) => {
+      if (Object.keys(prevTasksState).includes(over.id as columnIds)) {
+        if (active.data.current?.column === over.id) {
+          let columnContent = [
+            ...prevTasksState[active.data.current?.column as columnIds],
+          ];
+
+          const oldIndex = columnContent.findIndex((i) => i.id === active.id);
+
+          columnContent = arrayMove(
+            columnContent,
+            oldIndex,
+            columnContent.length - 1
+          );
+          const newTasksState = {
+            ...prevTasksState,
+            [active.data.current?.column]: columnContent,
+          };
+
+          return newTasksState;
+        }
+
+        let activeColumnContent = [
+          ...prevTasksState[active.data.current?.column as columnIds],
+        ];
+
+        activeColumnContent = activeColumnContent.filter(
+          (task) => task.id !== active.id
+        );
+
+        const overColumnContent = [...prevTasksState[over.id as columnIds]];
+
+        // overColumnContent.splice(
+        //   overColumnContent.length,
+        //   0,
+        //   active.data.current?.task
+        // );
+
+        overColumnContent.push(active.data.current?.task);
+
+        return {
+          ...prevTasksState,
+          [active.data.current?.column]: activeColumnContent,
+          [over.id]: overColumnContent,
+        };
+      }
+
+      const isSameList: boolean =
+        active.data.current?.column === over.data.current?.column;
+
+      // Caso in cui riordino la stessa lista
+      if (isSameList) {
+        let columnContent = [
+          ...prevTasksState[active.data.current?.column as columnIds],
+        ];
+
+        const oldIndex = columnContent.findIndex((i) => i.id === active.id);
+        const newIndex = columnContent.findIndex((i) => i.id === over.id);
+
+        columnContent = arrayMove(columnContent, oldIndex, newIndex);
+        const newTasksState = {
+          ...prevTasksState,
+          [active.data.current?.column]: columnContent,
+        };
+
+        return newTasksState;
+      } else {
+        // Caso in cui cambio la lista ad un item
+        let activeColumnContent = [
+          ...prevTasksState[active.data.current?.column as columnIds],
+        ];
+
+        activeColumnContent = activeColumnContent.filter(
+          (task) => task.id !== active.id
+        );
+
+        const overColumnContent = [
+          ...prevTasksState[over.data.current?.column as columnIds],
+        ];
+
+        const newIndex = overColumnContent.findIndex((i) => i.id === over.id);
+
+        overColumnContent.splice(newIndex, 0, active.data.current?.task);
+
+        const newTasksState = {
+          ...prevTasksState,
+          [active.data.current?.column]: activeColumnContent,
+          [over.data.current?.column]: overColumnContent,
+        };
+
+        return newTasksState;
+      }
+    });
+  }
+
+  return (
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      sensors={sensors}
+    >
+      <div className={css.container}>
+        {/* {Object.keys(tasks).map((column) => {
+
+          console.log(column);
+          return <div key={column}>{column}</div>;
+        })} */}
+        {Object.keys(tasks).map((column) => (
+          <Column
+            key={column}
+            id={column as columnIds}
+            tasksIds={tasks[column as columnIds].map((task) => task.id)}
+          >
+            {tasks[column as columnIds].map((task) => (
+              <DraggableItem
+                key={task.id}
+                task={task}
+                column={column as columnIds}
+              />
+            ))}
+          </Column>
+        ))}
+      </div>
+      {typeof window !== "undefined" &&
+        createPortal(
+          <DragOverlay>{activeTask && <Task task={activeTask} />}</DragOverlay>,
+          document.body
+        )}
+    </DndContext>
+  );
+}
+
+export default KanbanBoard;
