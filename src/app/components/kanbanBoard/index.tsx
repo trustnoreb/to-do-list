@@ -99,12 +99,13 @@ function KanbanBoard() {
     const { active, over } = event;
     if (!over) return;
     setOverTask(event.over?.data?.current?.task);
-    if (!over) return;
 
     if (active.id === over.id) return;
 
     setTasks((prevTasksState) => {
+      // STIAMO DROPPANDO SU UN CONTAINER
       if (Object.keys(prevTasksState).includes(over.id as columnIds)) {
+        // STIAMO DROPPANDO L'ITEM IN FONDO ALLO STESSO CONTAINER
         if (active.data.current?.column === over.id) {
           let columnContent = [
             ...prevTasksState[active.data.current?.column as columnIds],
@@ -125,6 +126,7 @@ function KanbanBoard() {
           return newTasksState;
         }
 
+        // STIAMO DROPPANDO L'ITEM IN FONDO AD UN CONTAINER DIVERSO
         let activeColumnContent = [
           ...prevTasksState[active.data.current?.column as columnIds],
         ];
@@ -135,12 +137,6 @@ function KanbanBoard() {
 
         const overColumnContent = [...prevTasksState[over.id as columnIds]];
 
-        // overColumnContent.splice(
-        //   overColumnContent.length,
-        //   0,
-        //   active.data.current?.task
-        // );
-
         overColumnContent.push(active.data.current?.task);
 
         return {
@@ -150,6 +146,7 @@ function KanbanBoard() {
         };
       }
 
+      // STIAMO DROPPANDO SU UN ALTRO ITEM
       const isSameList: boolean =
         active.data.current?.column === over.data.current?.column;
 
@@ -169,38 +166,37 @@ function KanbanBoard() {
         };
 
         return newTasksState;
-      } else {
-        // Caso in cui cambio la lista ad un item
-        let activeColumnContent = [
-          ...prevTasksState[active.data.current?.column as columnIds],
-        ];
-
-        activeColumnContent = activeColumnContent.filter(
-          (task) => task.id !== active.id
-        );
-
-        const overColumnContent = [
-          ...prevTasksState[over.data.current?.column as columnIds],
-        ];
-
-        const newIndex = overColumnContent.findIndex((i) => i.id === over.id);
-
-        overColumnContent.splice(newIndex, 0, active.data.current?.task);
-
-        const newTasksState = {
-          ...prevTasksState,
-          [active.data.current?.column]: activeColumnContent,
-          [over.data.current?.column]: overColumnContent,
-        };
-
-        return newTasksState;
       }
+
+      // Caso in cui cambio la lista ad un item
+      let activeColumnContent = [
+        ...prevTasksState[active.data.current?.column as columnIds],
+      ];
+
+      activeColumnContent = activeColumnContent.filter(
+        (task) => task.id !== active.id
+      );
+
+      const overColumnContent = [
+        ...prevTasksState[over.data.current?.column as columnIds],
+      ];
+
+      const newIndex = overColumnContent.findIndex((i) => i.id === over.id);
+
+      overColumnContent.splice(newIndex, 0, active.data.current?.task);
+
+      const newTasksState = {
+        ...prevTasksState,
+        [active.data.current?.column]: activeColumnContent,
+        [over.data.current?.column]: overColumnContent,
+      };
+
+      return newTasksState;
     });
   }
 
   function handleDragEnd(event: DragEndEvent) {
     console.log(event);
-    const { active, over } = event;
     setActiveTask(null);
     setOverTask(null);
   }
@@ -213,11 +209,6 @@ function KanbanBoard() {
       sensors={sensors}
     >
       <div className={css.container}>
-        {/* {Object.keys(tasks).map((column) => {
-
-          console.log(column);
-          return <div key={column}>{column}</div>;
-        })} */}
         {Object.keys(tasks).map((column) => (
           <Column
             key={column}
