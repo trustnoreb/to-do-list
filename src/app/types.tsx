@@ -11,4 +11,5 @@ export type TaskType = {
   id: string;
   name: string;
   status: "todo" | "doing" | "done";
+  selected: boolean;
 };
