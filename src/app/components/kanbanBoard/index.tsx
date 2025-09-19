@@ -96,16 +96,9 @@ function KanbanBoard() {
   }
 
   function handleDragOver(event: DragOverEvent) {
-    const { over } = event;
+    const { active, over } = event;
     if (!over) return;
     setOverTask(event.over?.data?.current?.task);
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
-    console.log(event);
-    const { active, over } = event;
-    setActiveTask(null);
-    setOverTask(null);
     if (!over) return;
 
     if (active.id === over.id) return;
@@ -203,6 +196,13 @@ function KanbanBoard() {
         return newTasksState;
       }
     });
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    console.log(event);
+    const { active, over } = event;
+    setActiveTask(null);
+    setOverTask(null);
   }
 
   return (
