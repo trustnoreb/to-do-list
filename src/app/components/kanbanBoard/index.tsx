@@ -125,7 +125,7 @@ function KanbanBoard() {
     if (active.id === over.id) return;
 
     setTasks((prevTasksState) => {
-      const copyState = cloneDeep(prevTasksState);
+      let copyState = cloneDeep(prevTasksState);
 
       // STIAMO DROPPANDO SU UN CONTAINER
       if (columns.includes(over.id as string)) {
@@ -133,16 +133,51 @@ function KanbanBoard() {
 
         copyState[oldIndex].status = over.id as "todo" | "doing" | "done";
 
-        return arrayMove(copyState, oldIndex, copyState.length - 1);
+        copyState = arrayMove(copyState, oldIndex, copyState.length - 1);
+
+        if (multiDragging) {
+          for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
+            const oldIndexSelected = copyState.findIndex(
+              (i) => i.id === sTask.id
+            );
+            copyState[oldIndexSelected].status = over.id as
+              | "todo"
+              | "doing"
+              | "done";
+            copyState = arrayMove(
+              copyState,
+              oldIndexSelected,
+              copyState.length - 1
+            );
+          }
+        }
+        return copyState;
       }
 
       // STIAMO DROPPANDO SU UN ITEM
       const oldIndex = copyState.findIndex((i) => i.id === active.id);
-      const newIndex = copyState.findIndex((i) => i.id === over.id);
+      let newIndex = copyState.findIndex((i) => i.id === over.id);
 
       copyState[oldIndex].status = copyState[newIndex].status;
 
-      return arrayMove(copyState, oldIndex, newIndex);
+      copyState = arrayMove(copyState, oldIndex, newIndex);
+
+      if (multiDragging) {
+        newIndex++;
+        for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
+          const oldIndexSelected = copyState.findIndex(
+            (i) => i.id === sTask.id
+          );
+          copyState[oldIndexSelected].status = over.id as
+            | "todo"
+            | "doing"
+            | "done";
+
+          copyState = arrayMove(copyState, oldIndexSelected, newIndex);
+          newIndex++;
+        }
+      }
+      return copyState;
     });
   }
 
