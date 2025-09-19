@@ -1,5 +1,6 @@
 "use client";
 import {
+  closestCenter,
   DndContext,
   DragEndEvent,
   DragOverEvent,
@@ -122,6 +123,8 @@ function KanbanBoard() {
     const { active, over } = event;
     if (!over) return;
 
+    console.log(over.id);
+
     if (active.id === over.id) return;
 
     setTasks((prevTasksState) => {
@@ -135,48 +138,46 @@ function KanbanBoard() {
 
         copyState = arrayMove(copyState, oldIndex, copyState.length - 1);
 
-        if (multiDragging) {
-          for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
-            const oldIndexSelected = copyState.findIndex(
-              (i) => i.id === sTask.id
-            );
-            copyState[oldIndexSelected].status = over.id as
-              | "todo"
-              | "doing"
-              | "done";
-            copyState = arrayMove(
-              copyState,
-              oldIndexSelected,
-              copyState.length - 1
-            );
-          }
-        }
+        // if (multiDragging) {
+        //   for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
+        //     const oldIndexSelected = copyState.findIndex(
+        //       (i) => i.id === sTask.id
+        //     );
+        //     copyState[oldIndexSelected].status = over.id as
+        //       | "todo"
+        //       | "doing"
+        //       | "done";
+        //     copyState = arrayMove(
+        //       copyState,
+        //       oldIndexSelected,
+        //       copyState.length - 1
+        //     );
+        //   }
+        // }
         return copyState;
       }
 
       // STIAMO DROPPANDO SU UN ITEM
       const oldIndex = copyState.findIndex((i) => i.id === active.id);
-      let newIndex = copyState.findIndex((i) => i.id === over.id);
+      const newIndex = copyState.findIndex((i) => i.id === over.id);
 
       copyState[oldIndex].status = copyState[newIndex].status;
 
       copyState = arrayMove(copyState, oldIndex, newIndex);
 
-      if (multiDragging) {
-        newIndex++;
-        for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
-          const oldIndexSelected = copyState.findIndex(
-            (i) => i.id === sTask.id
-          );
-          copyState[oldIndexSelected].status = over.id as
-            | "todo"
-            | "doing"
-            | "done";
+      // if (multiDragging) {
+      //   const newStatus = copyState[newIndex].status;
+      //   newIndex++;
+      //   for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
+      //     const oldIndexSelected = copyState.findIndex(
+      //       (i) => i.id === sTask.id
+      //     );
+      //     copyState[oldIndexSelected].status = newStatus;
 
-          copyState = arrayMove(copyState, oldIndexSelected, newIndex);
-          newIndex++;
-        }
-      }
+      //     copyState = arrayMove(copyState, oldIndexSelected, newIndex);
+      //     newIndex++;
+      //   }
+      // }
       return copyState;
     });
   }
@@ -184,6 +185,72 @@ function KanbanBoard() {
   function handleDragEnd(event: DragEndEvent) {
     setActiveTask(null);
     console.log(multiDragging);
+
+    const { active, over } = event;
+    if (!over) return;
+
+    setTasks((prevTasksState) => {
+      let copyState = cloneDeep(prevTasksState);
+
+      const tasksToUpdate = selectedTask.filter((t) => t.id !== active.id);
+
+      for (const taskToRemove of tasksToUpdate) {
+        copyState = copyState.filter((t) => t.id !== taskToRemove.id);
+      }
+
+      // STIAMO DROPPANDO SU UN CONTAINER
+      if (multiDragging) {
+        if (columns.includes(over.id as string)) {
+          tasksToUpdate.forEach(
+            (t) => (t.status = over.id as "todo" | "doing" | "done")
+          );
+          copyState.push(...tasksToUpdate);
+
+          // for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
+          //   const oldIndexSelected = copyState.findIndex(
+          //     (i) => i.id === sTask.id
+          //   );
+          //   copyState[oldIndexSelected].status = over.id as
+          //     | "todo"
+          //     | "doing"
+          //     | "done";
+          //   copyState = arrayMove(
+          //     copyState,
+          //     oldIndexSelected,
+          //     copyState.length - 1
+          //   );
+          // }
+          return copyState;
+        }
+
+        // STIAMO DROPPANDO SU UN ITEM
+        const newStatus = over?.data?.current?.task?.status;
+
+        tasksToUpdate.forEach(
+          (t) => (t.status = newStatus as "todo" | "doing" | "done")
+        );
+
+        const targetIndex = copyState.findIndex((i) => i.id === over.id);
+
+        copyState = [
+          ...copyState.slice(0, targetIndex + 1),
+          ...tasksToUpdate,
+          ...copyState.slice(targetIndex + 1),
+        ];
+
+        // newIndex++;
+        // for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
+        //   const oldIndexSelected = copyState.findIndex(
+        //     (i) => i.id === sTask.id
+        //   );
+        //   copyState[oldIndexSelected].status = newStatus;
+
+        //   copyState = arrayMove(copyState, oldIndexSelected, newIndex);
+        //   newIndex++;
+        // }
+      }
+      return copyState;
+    });
   }
 
   return (
@@ -191,6 +258,7 @@ function KanbanBoard() {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      collisionDetection={closestCenter}
       sensors={sensors}
     >
       <div className={css.container}>

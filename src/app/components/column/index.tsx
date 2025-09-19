@@ -21,10 +21,6 @@ interface Props {
 function Column({ id, tasksIds, children }: Props) {
   const { setNodeRef } = useDroppable({
     id: id,
-    // data: {
-    //   type: "Column",
-    //   column,
-    // },
   });
 
   return (
