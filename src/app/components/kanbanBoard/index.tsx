@@ -1,6 +1,5 @@
 "use client";
 import {
-  closestCorners,
   DndContext,
   DragEndEvent,
   DragOverEvent,
@@ -149,6 +148,8 @@ function KanbanBoard() {
 
       copyState = arrayMove(copyState, oldIndex, newIndex);
 
+      console.log("uela");
+
       return copyState;
     });
   }
@@ -204,7 +205,7 @@ function KanbanBoard() {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      collisionDetection={closestCorners}
+      // collisionDetection={closestCorners}
       sensors={sensors}
     >
       <div className={css.container}>

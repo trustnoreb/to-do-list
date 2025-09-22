@@ -13,6 +13,9 @@
 }
 
 .bottomMultipleTask {
+  display: flex;
+  justify-content: start;
+  align-items: end;
   background: #0099ff;
   border-bottom-left-radius: 1rem;
   border-bottom-right-radius: 1rem;
@@ -33,6 +36,14 @@
   border-radius: 50%;
   z-index: 30;
   right: 0;
+}
+
+.more {
+  color: white;
+  font-weight: bold;
+  position: relative;
+  left: 12;
+  bottom: 4;
 }
 
 .container {

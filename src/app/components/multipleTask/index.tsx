@@ -14,7 +14,9 @@ function MultipleTask({ task, isDragging, numberOfDrag }: Props) {
         {!isDragging && <span>{task?.name}</span>}
       </div>
       <div className={css.taskCounter}>{numberOfDrag}</div>
-      <div className={css.bottomMultipleTask}></div>
+      <div className={css.bottomMultipleTask}>
+        <span className={css.more}>...</span>
+      </div>
     </div>
   );
 }
