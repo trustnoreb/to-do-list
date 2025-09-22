@@ -4,7 +4,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cloneDeep } from "lodash-es";
 import { Dispatch, SetStateAction } from "react";
-import MultipleTask from "../multipleTask";
 import Task from "../task";
 import css from "./task.module.css";
 interface Props {
@@ -63,11 +62,12 @@ function DraggableItem({
       className={`${isDragging && css.dragging}`}
       onClick={handleTaskClick}
     >
-      {multiDragging && isDragging ? (
+      {/* {multiDragging && isDragging ? (
         <MultipleTask isDragging={isDragging}></MultipleTask>
       ) : (
         <Task key={task.id} task={task} isDragging={isDragging} />
-      )}
+        )} */}
+      <Task key={task.id} task={task} isDragging={isDragging} />
     </div>
   );
 }
