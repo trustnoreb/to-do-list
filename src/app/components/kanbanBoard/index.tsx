@@ -1,6 +1,6 @@
 "use client";
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
   DragEndEvent,
   DragOverEvent,
@@ -138,22 +138,6 @@ function KanbanBoard() {
 
         copyState = arrayMove(copyState, oldIndex, copyState.length - 1);
 
-        // if (multiDragging) {
-        //   for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
-        //     const oldIndexSelected = copyState.findIndex(
-        //       (i) => i.id === sTask.id
-        //     );
-        //     copyState[oldIndexSelected].status = over.id as
-        //       | "todo"
-        //       | "doing"
-        //       | "done";
-        //     copyState = arrayMove(
-        //       copyState,
-        //       oldIndexSelected,
-        //       copyState.length - 1
-        //     );
-        //   }
-        // }
         return copyState;
       }
 
@@ -165,19 +149,6 @@ function KanbanBoard() {
 
       copyState = arrayMove(copyState, oldIndex, newIndex);
 
-      // if (multiDragging) {
-      //   const newStatus = copyState[newIndex].status;
-      //   newIndex++;
-      //   for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
-      //     const oldIndexSelected = copyState.findIndex(
-      //       (i) => i.id === sTask.id
-      //     );
-      //     copyState[oldIndexSelected].status = newStatus;
-
-      //     copyState = arrayMove(copyState, oldIndexSelected, newIndex);
-      //     newIndex++;
-      //   }
-      // }
       return copyState;
     });
   }
@@ -194,9 +165,9 @@ function KanbanBoard() {
 
       const tasksToUpdate = selectedTask.filter((t) => t.id !== active.id);
 
-      for (const taskToRemove of tasksToUpdate) {
-        copyState = copyState.filter((t) => t.id !== taskToRemove.id);
-      }
+      copyState = copyState.filter(
+        (t) => !tasksToUpdate.map((task) => task.id).includes(t.id)
+      );
 
       // STIAMO DROPPANDO SU UN CONTAINER
       if (multiDragging) {
@@ -206,20 +177,6 @@ function KanbanBoard() {
           );
           copyState.push(...tasksToUpdate);
 
-          // for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
-          //   const oldIndexSelected = copyState.findIndex(
-          //     (i) => i.id === sTask.id
-          //   );
-          //   copyState[oldIndexSelected].status = over.id as
-          //     | "todo"
-          //     | "doing"
-          //     | "done";
-          //   copyState = arrayMove(
-          //     copyState,
-          //     oldIndexSelected,
-          //     copyState.length - 1
-          //   );
-          // }
           return copyState;
         }
 
@@ -237,17 +194,6 @@ function KanbanBoard() {
           ...tasksToUpdate,
           ...copyState.slice(targetIndex + 1),
         ];
-
-        // newIndex++;
-        // for (const sTask of selectedTask.filter((t) => t.id !== active.id)) {
-        //   const oldIndexSelected = copyState.findIndex(
-        //     (i) => i.id === sTask.id
-        //   );
-        //   copyState[oldIndexSelected].status = newStatus;
-
-        //   copyState = arrayMove(copyState, oldIndexSelected, newIndex);
-        //   newIndex++;
-        // }
       }
       return copyState;
     });
@@ -258,7 +204,7 @@ function KanbanBoard() {
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      collisionDetection={closestCenter}
+      collisionDetection={closestCorners}
       sensors={sensors}
     >
       <div className={css.container}>
