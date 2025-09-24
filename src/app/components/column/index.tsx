@@ -27,7 +27,7 @@ function Column({ id, tasksIds, children }: Props) {
     <div className={css.column}>
       <h1 className={css.heading}>{columnTitles[id]}</h1>
       <div className={css.tasksContainer} ref={setNodeRef}>
-        <SortableContext key={css.column} items={tasksIds}>
+        <SortableContext key={id} items={tasksIds}>
           {children}
         </SortableContext>
       </div>

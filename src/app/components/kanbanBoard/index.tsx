@@ -11,6 +11,7 @@ import {
 } from "@dnd-kit/core";
 // import { SortableContext } from "@dnd-kit/sortable";
 import { columnIds, TaskList, TaskType } from "@/app/types";
+import customCollisionDetection from "@/app/utils/customCollisionDetection";
 import { arrayMove } from "@dnd-kit/sortable";
 import { cloneDeep } from "lodash-es";
 import { useMemo, useState } from "react";
@@ -30,74 +31,6 @@ export function findColumn(tasks: TaskList, item: TaskType) {
 }
 
 function KanbanBoard() {
-  // const columns = ["todo", "doing", "done"];
-
-  // const allTask: TaskType[] = [
-  //   {
-  //     id: "task-1",
-  //     name: "Preparare la presentazione settimanale",
-  //     status: "todo",
-  //     selected: false,
-  //   },
-  //   {
-  //     id: "task-4",
-  //     name: "Scrivere il report del progetto X",
-  //     status: "todo",
-  //     selected: false,
-  //   },
-  //   {
-  //     id: "task-8",
-  //     name: "Aggiornare la documentazione tecnica",
-  //     status: "todo",
-  //     selected: false,
-  //   },
-
-  //   {
-  //     id: "task-2",
-  //     name: "Rivedere il budget mensile",
-  //     status: "doing",
-  //     selected: false,
-  //   },
-  //   {
-  //     id: "task-5",
-  //     name: "Organizzare riunione con il team marketing",
-  //     status: "doing",
-  //     selected: false,
-  //   },
-  //   {
-  //     id: "task-7",
-  //     name: "Preparare le email per la campagna pubblicitaria",
-  //     status: "doing",
-  //     selected: false,
-  //   },
-  //   {
-  //     id: "task-10",
-  //     name: "Creare il piano di formazione per i nuovi assunti",
-  //     status: "doing",
-  //     selected: false,
-  //   },
-
-  //   {
-  //     id: "task-3",
-  //     name: "Aggiornare il sito web aziendale",
-  //     status: "done",
-  //     selected: false,
-  //   },
-
-  //   {
-  //     id: "task-6",
-  //     name: "Analizzare i dati di vendita del trimestre",
-  //     status: "done",
-  //     selected: false,
-  //   },
-  //   {
-  //     id: "task-9",
-  //     name: "Testare la nuova funzionalità dell’app",
-  //     status: "done",
-  //     selected: false,
-  //   },
-  // ];
-
   const allTask: TaskList = {
     todo: [
       {
@@ -203,8 +136,6 @@ function KanbanBoard() {
     const { active, over } = event;
     if (!over) return;
 
-    console.log(over.id);
-
     if (active.id === over.id) return;
 
     setTasks((prevTasksState) => {
@@ -288,59 +219,65 @@ function KanbanBoard() {
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveTask(null);
-    console.log(multiDragging);
 
     const { active, over } = event;
     if (!over) return;
 
-    // setTasks((prevTasksState) => {
-    //   let copyState = cloneDeep(prevTasksState);
+    if (multiDragging) {
+      setTasks((prevTasksState) => {
+        let copyState = cloneDeep(prevTasksState);
 
-    //   const tasksToUpdate = selectedTask.filter((t) => t.id !== active.id);
+        const tasksToUpdate = selectedTask.filter((t) => t.id !== active.id);
 
-    //   copyState = copyState.filter(
-    //     (t) => !tasksToUpdate.map((task) => task.id).includes(t.id)
-    //   );
+        for (const task of tasksToUpdate) {
+          const columnTask = findColumn(copyState, task);
+          copyState = {
+            ...copyState,
+            [columnTask as columnIds]: copyState[
+              columnTask as columnIds
+            ].filter((t) => t.id !== task.id),
+          };
+        }
 
-    //   // STIAMO DROPPANDO SU UN CONTAINER
-    //   if (multiDragging) {
-    //     if (columns.includes(over.id as string)) {
-    //       tasksToUpdate.forEach(
-    //         (t) => (t.status = over.id as "todo" | "doing" | "done")
-    //       );
-    //       copyState.push(...tasksToUpdate);
+        // STIAMO DROPPANDO SU UN CONTAINER
+        if (Object.keys(copyState).includes(over.id as string)) {
+          copyState[over.id as columnIds].push(...tasksToUpdate);
 
-    //       return copyState;
-    //     }
+          return copyState;
+        }
 
-    //     // STIAMO DROPPANDO SU UN ITEM
-    //     const newStatus = over?.data?.current?.task?.status;
+        // STIAMO DROPPANDO SU UN ITEM
 
-    //     tasksToUpdate.forEach(
-    //       (t) => (t.status = newStatus as "todo" | "doing" | "done")
-    //     );
+        const targetColumn = findColumn(copyState, over.data.current?.task);
+        const targetIndex = copyState[targetColumn as columnIds].findIndex(
+          (i) => i.id === over.id
+        );
 
-    //     const targetIndex = copyState.findIndex((i) => i.id === over.id);
+        const newColumnTasks = [
+          ...copyState[targetColumn as columnIds].slice(0, targetIndex + 1),
+          ...tasksToUpdate,
+          ...copyState[targetColumn as columnIds].slice(targetIndex + 1),
+        ];
 
-    //     copyState = [
-    //       ...copyState.slice(0, targetIndex + 1),
-    //       ...tasksToUpdate,
-    //       ...copyState.slice(targetIndex + 1),
-    //     ];
-    //   }
-    //   return copyState;
-    // });
+        copyState = {
+          ...copyState,
+          [targetColumn as columnIds]: newColumnTasks,
+        };
+        return copyState;
+      });
+    }
   }
-  if (typeof window === "undefined") {
-    // Evita di renderizzare elementi drag-n-drop sul server
-    return null;
-  }
+
+  // if (typeof window === "undefined") {
+  //   // Evita di renderizzare elementi drag-n-drop sul server
+  //   return null;
+  // }
   return (
     <DndContext
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      // collisionDetection={closestCorners}
+      collisionDetection={customCollisionDetection}
       sensors={sensors}
     >
       <div className={css.container}>
